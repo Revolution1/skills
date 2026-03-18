@@ -47,6 +47,8 @@ Do not migrate these unless the user explicitly wants them:
 - `.next`, `dist`, `build`, coverage outputs
 - `.pytest_cache`, `.mypy_cache`, `__pycache__`
 - `.terraform`
+- `target/` for Rust builds
+- `pkg/mod`, `vendor/` for Go modules unless explicitly needed
 - package manager caches
 - browser caches
 - large vendored trees that can be re-fetched
@@ -294,7 +296,7 @@ In addition to files, inspect what the source machine is actively running. Do no
 Classify runtime items into:
 
 - **Destination-provided**: services the destination template/host should already manage
-- **User-managed daemons**: PM2 apps, custom agent wrappers, long-running CLIs
+- **User-managed daemons**: PM2 apps, supervisord programs, custom agent wrappers, long-running CLIs
 - **Project dev services**: `next dev`, `uvicorn`, `npm run dev`, `docker compose up`
 - **Stateful local dependencies**: PostgreSQL, Redis, local volumes, SQLite DBs
 
@@ -327,11 +329,11 @@ For SSH state, record separately:
 
 - Prefer reproducible manifests over ad-hoc migration decisions
 - Do not migrate `vendor/` trees wholesale by default even when modified; identify the actual edited files or subtrees first
-- PM2 presence alone is not enough; inspect `~/.pm2/dump.pm2` to see what apps actually need restoration
+- Do not assume one process manager; inspect PM2, supervisord, systemd user services, and similar supervisor state before deciding what needs restoration
 - Docker port listeners may remain even when `docker ps` is empty or stale state exists; confirm both container state and compose files before planning restoration
 - If a local app exposes a TCP port but is clearly a dev server (`next dev`, `uvicorn --reload`), restore it via source + env + start command, not by migrating process state
 - Treat local SQLite DBs and app auth DBs as data, not cache, when they back user tools or dashboards
-- PM2- or tool-specific dashboards can be excluded unless the user explicitly wants their local app state restored
+- Tool-specific dashboards or local helper UIs can be excluded unless the user explicitly wants their app state restored
 - Large multi-vendor repos can be excluded wholesale when they are not part of the current migration target
 - Service inventory should still be recorded even when the user chooses not to restore services immediately on the destination
 - Test the exact transfer primitive you plan to use (`ssh`, `scp`, `rsync`) before committing to that path
