@@ -26,7 +26,7 @@ Conventions:
 | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`dev-machine-migration`](skills/dev-machine-migration/SKILL.md)                     | Migrate high-value developer data between machines or Coder workspaces. Runs in explicit phases: inventory → preflight → manifest → confirm → dry-run → copy → verify.                    |
 | [`enterprise-infrastructure-osint`](skills/enterprise-infrastructure-osint/SKILL.md) | Authorized external attack-surface mapping. Guides passive DNS enumeration, CT log mining, port scanning, frontend stack fingerprinting, API extraction, and confidence-tiered reporting. |
-| [`remote-chrome-devtools`](skills/remote-chrome-devtools/SKILL.md)                   | Diagnose and start Chrome with remote debugging on headless/VNC Linux desktops so that Chrome DevTools MCP can connect to `127.0.0.1:9222`.                                               |
+| [`remote-chrome-devtools`](skills/remote-chrome-devtools/SKILL.md)                   | Diagnose Chrome DevTools MCP/CDP on remote Linux, covering desktop/VNC, headless Chrome, no saved MCP config, missing Chrome, and Docker browser fallbacks.                               |
 
 ## Validation
 
