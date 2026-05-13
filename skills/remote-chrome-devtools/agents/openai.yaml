@@ -1,0 +1,4 @@
+interface:
+  display_name: "Remote Chrome DevTools"
+  short_description: "Run Chrome DevTools MCP on remote Linux"
+  default_prompt: "Use $remote-chrome-devtools to diagnose and start Chrome for Chrome DevTools MCP in a remote Linux desktop."
