@@ -1,37 +1,64 @@
 # Revolution1 Skills
 
-Reusable Codex-compatible skills for developer workflows.
+Reusable AI agent skills for developer and infrastructure workflows, compatible with VS Code Copilot agent customization and OpenAI agent interfaces.
 
 ## Repository layout
 
 ```text
 skills/
   <skill-name>/
-    SKILL.md
+    SKILL.md          # required — frontmatter + instructions
+    agents/           # optional — agent-specific interface definitions
+      openai.yaml
+scripts/
+  validate_skills.py  # structural validator (no external dependencies)
 ```
 
-This layout keeps the repo compatible with common public skill-sharing conventions:
+Conventions:
+
 - one folder per skill
-- a required `SKILL.md` in each skill folder
-- optional future expansion to `agents/`, `scripts/`, `references/`, and `assets/`
+- a required `SKILL.md` with YAML frontmatter (`name`, `description`) in each skill folder
+- optional `agents/` subdirectory for agent-specific interface definitions
 
 ## Included skills
 
-- `skills/dev-machine-migration` — migrate useful developer data between machines or workspaces while avoiding rebuildable bulk.
+| Skill                                                                                | Description                                                                                                                                                                               |
+| ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`dev-machine-migration`](skills/dev-machine-migration/SKILL.md)                     | Migrate high-value developer data between machines or Coder workspaces. Runs in explicit phases: inventory → preflight → manifest → confirm → dry-run → copy → verify.                    |
+| [`enterprise-infrastructure-osint`](skills/enterprise-infrastructure-osint/SKILL.md) | Authorized external attack-surface mapping. Guides passive DNS enumeration, CT log mining, port scanning, frontend stack fingerprinting, API extraction, and confidence-tiered reporting. |
+| [`remote-chrome-devtools`](skills/remote-chrome-devtools/SKILL.md)                   | Diagnose and start Chrome with remote debugging on headless/VNC Linux desktops so that Chrome DevTools MCP can connect to `127.0.0.1:9222`.                                               |
+
+## Validation
+
+Run the included validator to check skill structure:
+
+```bash
+python3 scripts/validate_skills.py
+```
+
+The validator checks each skill for:
+
+- presence of `SKILL.md`
+- valid YAML frontmatter with `name` and `description` fields
+- `name` matching the directory name
+- description of sufficient length to guide agent triggering
+- file length under 500 lines
+- presence of a top-level Markdown heading
 
 ## Usage
 
-Copy the desired skill folder into your Codex skills directory, or vendor it into your own repository.
+Copy the desired skill folder into your agent skills directory, or vendor it into your own repository.
 
-Example:
+Example (VS Code Copilot):
 
 ```bash
-cp -R skills/dev-machine-migration "$CODEX_HOME/skills/"
+cp -R skills/dev-machine-migration ~/.vscode/skills/
 ```
 
 ## Design notes
 
 These skills are written to be:
+
 - shareable in public repositories
 - free of machine-specific secrets
-- practical for real migration and developer-ops workflows
+- practical for real developer-ops and infrastructure workflows

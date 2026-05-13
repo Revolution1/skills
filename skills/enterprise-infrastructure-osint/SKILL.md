@@ -1,61 +1,70 @@
 ---
 name: enterprise-infrastructure-osint
-description: Comprehensive methodology for mapping company infrastructure, technology stacks, and relationships through multi-layer OSINT and network reconnaissance. Includes passive DNS enumeration, port scanning, frontend stack fingerprinting, API extraction, certificate analysis, and confidence-tiered evidence framework.
-allowed-tools:
-  - "Bash"
-  - "Read"
-  - "Write"
-  - "web_fetch"
+description: Use for authorized infrastructure OSINT and external attack-surface mapping for an organization, domain, or owned asset set. Guides passive DNS and certificate enumeration, scoped network probing, frontend stack fingerprinting, API extraction, certificate analysis, relationship mapping, and confidence-tiered evidence reporting.
 ---
 
 # Enterprise Infrastructure Deep Reconnaissance
 
-You are an infrastructure OSINT specialist. Your mission is to systematically map a company's digital footprint across DNS, network services, frontend technologies, backend patterns, and inter-infrastructure relationships. This skill captures a **proven two-phase methodology** from live enterprise investigation work, enabling reusable, confidence-aware reconnaissance.
+Systematically map an organization's externally observable digital footprint across DNS, network services, frontend technologies, backend patterns, and infrastructure relationships.
 
 ---
 
-## 🎯 Core Objectives
+## Authorization and scope
 
-1. **Asset Inventory**: Discover all subdomains, IP addresses, and service endpoints.
-2. **Technology Stack Profiling**: Identify frontend frameworks, backend patterns, cloud dependencies, and edge infrastructure.
-3. **Relationship Mapping**: Connect public-facing surfaces to internal tooling, private networks, and organizational boundaries.
-4. **Evidence Tiering**: Classify findings by confidence level to support prioritized investigation and reduce false positives.
-5. **Audit Trail**: Create machine-readable evidence files linking conclusions to source probes.
+Use this skill only for assets the user owns, administers, or is explicitly authorized to assess. Before active probing, establish:
+
+- target organization and seed domains
+- in-scope domains, IP ranges, cloud accounts, and environments
+- out-of-scope assets, third-party services, and rate limits
+- whether active scanning is allowed, and at what intensity
+- reporting format and evidence retention expectations
+
+If authorization or scope is unclear, limit work to passive collection and ask before running scans.
+
+## Core Objectives
+
+1. Asset inventory: discover in-scope subdomains, IP addresses, and service endpoints.
+2. Technology stack profiling: identify frontend frameworks, backend patterns, cloud dependencies, and edge infrastructure.
+3. Relationship mapping: connect public-facing surfaces to infrastructure boundaries without asserting relationships from weak evidence alone.
+4. Evidence tiering: classify findings by confidence level to reduce false positives.
+5. Audit trail: create machine-readable evidence files linking conclusions to source probes.
 
 ---
 
-## 📋 Prerequisites
+## Prerequisites
 
-- **Network connectivity**: Ability to run DNS queries and TCP probes from a control workstation.
-- **Tools**: Core OSINT toolkit:
+- Network connectivity for DNS queries and scoped TCP/HTTP probes.
+- Core OSINT toolkit:
   - DNS: `dig`, `host`, `nslookup`
   - Reverse IP: `hackertarget.com` API or `crt.sh` (Certificate Transparency logs)
-  - Network scanning: `nmap` (with service detection `-sV`, script scans `-sC`)
+  - Network scanning: `nmap` with service detection for authorized targets
   - TLS/Certificate: `openssl s_client`, `curl --resolve`
   - Grep/text processing: `rg`, `grep`, `awk`, `sed`
   - Optional HTTP clients: `curl`, `wget`
-- **Working directory**: A structured workspace with subdirectories for DNS, ports, HTTP headers, TLS, reports, and raw evidence.
-- **Time investment**: ~2–4 hours for comprehensive enumeration depending on organization size and network complexity.
+- A structured workspace with subdirectories for DNS, ports, HTTP headers, TLS, reports, and raw evidence.
+- Time investment: about 2-4 hours for comprehensive enumeration depending on organization size and network complexity.
 
 ---
 
-## 🔄 Two-Phase Methodology
+## Two-Phase Methodology
 
 ### Phase 1: Asset Discovery & Technology Stack Fingerprinting
 
-**Goal**: Build a complete inventory of domains, IPs, services, and identify frontend/backend technologies.
+Goal: build a scoped inventory of domains, IPs, services, and observable frontend/backend technologies.
 
 #### Step 1.1: DNS & Subdomain Enumeration
 
 1. **Seed domain collection**:
+
    ```bash
-   # List known parent domains (from WHOIS, initial investigation, or user input)
+   # List known parent domains from user input, public records, or approved inventory.
    dig +short <domain>
    dig +short www.<domain>
    dig +short api.<domain>
    ```
 
 2. **Certificate Transparency (CT) log mining**:
+
    ```bash
    # Extract all registered certificates for the domain
    curl -s "https://crt.sh/?q=%.<domain>&output=json" | jq -r '.[].name_value' | sort -u
@@ -68,10 +77,11 @@ You are an infrastructure OSINT specialist. Your mission is to systematically ma
 #### Step 1.2: Reverse-IP Aggregation
 
 1. **Query each unique IP** for known hosting relationships:
+
    ```bash
    # Hackertarget API example (free tier limit ~100 queries/day)
    curl -s "https://api.hackertarget.com/reverseiplookup/?ip=<IP>" | head -20
-   
+
    # Or manual nmap approach (slow but comprehensive)
    nmap --script hostmap-bfk.nse --script-args hostmap-bfk.prefix=<domain> <IP>
    ```
@@ -82,20 +92,22 @@ You are an infrastructure OSINT specialist. Your mission is to systematically ma
 #### Step 1.3: IP & Port Discovery
 
 1. **Create IP list** from DNS + reverse-IP results.
+
    ```bash
    # Extract unique IPs into dns/unique_ips.txt
    grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}' dns/* | cut -d: -f2 | sort -u > dns/unique_ips.txt
    ```
 
-2. **Run tiered port scans**:
+2. **Run tiered port scans only for authorized targets**:
+
    ```bash
-   # HTTP/HTTPS-focused (fast)
+   # HTTP/HTTPS-focused.
    nmap -p80,443,8080,8443 -sV -sC -oA ports/nmap_http_tls <target_list>
-   
-   # Service detection (slower)
-   nmap -p- -sV --top-ports 1000 -oA ports/nmap_service <target_list>
-   
-   # Full scan (comprehensive but very slow)
+
+   # Common service detection.
+   nmap --top-ports 1000 -sV -oA ports/nmap_service <target_list>
+
+   # Full scan, only when explicitly authorized.
    nmap -p- -sV -sC -oA ports/nmap_full <target_list>
    ```
 
@@ -109,6 +121,7 @@ You are an infrastructure OSINT specialist. Your mission is to systematically ma
 For each HTTP/HTTPS endpoint (80, 443, 8080, 8443):
 
 1. **Fetch homepage**:
+
    ```bash
    curl -s https://<domain>:<port> | head -1000 > raw/<domain>.html
    ```
@@ -132,6 +145,7 @@ For each HTTP/HTTPS endpoint (80, 443, 8080, 8443):
    - Axios, fetch, jQuery, superagent, etc.
 
 5. **Extract visible API endpoints** from bundle:
+
    ```bash
    # Look for API patterns in main bundle and chunks
    rg -i "https?://.*\.com/api/|'/api/|/v\d+/" raw/<domain>/ --type js | head -100
@@ -153,6 +167,7 @@ For each HTTP/HTTPS endpoint (80, 443, 8080, 8443):
 #### Step 1.5: TLS & Certificate Analysis
 
 1. **Query each public endpoint**:
+
    ```bash
    openssl s_client -connect <IP>:443 -servername <domain> < /dev/null 2>/dev/null | openssl x509 -noout -text
    ```
@@ -175,9 +190,10 @@ For each HTTP/HTTPS endpoint (80, 443, 8080, 8443):
 #### Step 2.1: DNS Resolution Consolidation
 
 1. **Create domain-to-IP mapping** (`dns/domain_ip_map.tsv`):
+
    ```
    domain    IP    record_type    cname_chain
-   app.weicha88.com    139.224.204.241    A    pro-istio-external-slb.weicha88.com
+   app.example.com    203.0.113.10    A    edge.example.com
    ```
 
 2. **Create IP-to-domain reverse mapping** for quick lookup.
@@ -185,6 +201,7 @@ For each HTTP/HTTPS endpoint (80, 443, 8080, 8443):
 #### Step 2.2: Live DNS & SNI Probing
 
 1. **Current DNS state**:
+
    ```bash
    for domain in $(cat dns/all_domains_discovered.txt); do
      echo "=== $domain ===" >> raw/live_dns_probe.txt
@@ -193,6 +210,7 @@ For each HTTP/HTTPS endpoint (80, 443, 8080, 8443):
    ```
 
 2. **SNI certificate discovery** (multi-cert on shared IP):
+
    ```bash
    for ip in $(cat dns/unique_ips.txt); do
      for domain in $(cat dns/all_domains_discovered.txt); do
@@ -211,10 +229,11 @@ For each HTTP/HTTPS endpoint (80, 443, 8080, 8443):
 #### Step 2.3: Forced Host Routing & Load Balancer Fingerprinting
 
 1. **Probe with forced host header**:
+
    ```bash
    # Force domain A to IP of domain B
    curl -vI -H "Host: <domain_A>" https://<ip_of_domain_B>:443 2>&1 | grep -E "HTTP|server:|x-powered-by|istio|envoy|nginx|tengine"
-   
+
    # Shorter form with --resolve
    curl --resolve <domain_A>:443:<ip_of_domain_B> -vI https://<domain_A>/ 2>&1 | head -30
    ```
@@ -233,15 +252,13 @@ For each HTTP/HTTPS endpoint (80, 443, 8080, 8443):
 #### Step 2.4: Private Network Detection
 
 1. **Check for RFC 1918 addresses** in DNS or reverse-IP results:
+
    ```bash
    # Private ranges: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16
    rg '(10|192\.168|172\.1[6-9]|172\.2[0-9]|172\.3[0-1])\.' dns/
    ```
 
-2. **Attempt connection** (usually fails from public internet):
-   ```bash
-   nmap -p22,80,443 <private_range> --max-retries 0 -T5
-   ```
+2. **Do not scan private ranges by default.** Treat private IPs found in public evidence as boundary indicators. Probe them only if the user confirms those networks are reachable, in scope, and authorized.
 
 3. **Classify as**:
    - **Internal-only tooling**: Jenkins, GitLab, Nexus, Harbor, Kibana (development/CI/CD)
@@ -251,10 +268,11 @@ For each HTTP/HTTPS endpoint (80, 443, 8080, 8443):
 #### Step 2.5: Cross-Domain Artifact Collection
 
 1. **Google Cloud / Alibaba Cloud / AWS indicators**:
+
    ```bash
    # Cloud storage links
    rg -i 'oss-cn-|aliyuncs|googleapis|amazonaws|storage.googleapis' raw/
-   
+
    # Log aggregation endpoints
    rg -i 'log\.aliyuncs|cloudwatch|stackdriver|loggly' raw/
    ```
@@ -267,13 +285,16 @@ Create a master relationship diagram in `report/infrastructure_relationships.md`
 
 ```markdown
 ## Public Edges
+
 - IP A (edge tech: Istio/Envoy) → domains: {app.company.com, api.company.com, ...}
 - IP B (edge tech: Tengine) → domains: {partner.com, legacy.partner.com, ...}
 
 ## Private Tooling (RFC 1918)
+
 - 10.10.1.x/24 (yapi, gitlab, harbor, nexus) → Internal-only dev/CI
 
 ## Evidence Confidence Tiers
+
 - Tier A (high): live DNS dig, SNI probes, nmap scans
 - Tier B (medium): consolidated mapping files from structured collection
 - Tier C (hint-only): reverse-IP historical aggregation (noisy)
@@ -281,26 +302,27 @@ Create a master relationship diagram in `report/infrastructure_relationships.md`
 
 ---
 
-## 🛠️ Recommended Tools & Commands
+## Recommended Tools & Commands
 
-| Task | Primary Tool | Backup |
-|:---|:---|:---|
-| DNS resolution | `dig` | `nslookup`, `host` |
-| CT log mining | `curl + crt.sh` | Manual CT log browser |
-| Reverse IP | `hackertarget.com` API | `nmap --script hostmap-bfk` |
-| Port scanning | `nmap` | `masscan` (fast), `zmap` (research) |
-| TLS certificate | `openssl s_client` | `curl -vI`, `testssl.sh` |
-| Header inspection | `curl -I`, `curl -v` | `nc`, `telnet` |
-| Grep/parsing | `rg` (ripgrep), `jq` | `grep`, `sed`, `awk` |
-| Workflow automation | `bash` loops with file tracking | Python/Go scripts |
+| Task                | Primary Tool                    | Backup                        |
+| :------------------ | :------------------------------ | :---------------------------- |
+| DNS resolution      | `dig`                           | `nslookup`, `host`            |
+| CT log mining       | `curl + crt.sh`                 | Manual CT log browser         |
+| Reverse IP          | `hackertarget.com` API          | `nmap --script hostmap-bfk`   |
+| Port scanning       | `nmap`                          | Approved organization scanner |
+| TLS certificate     | `openssl s_client`              | `curl -vI`, `testssl.sh`      |
+| Header inspection   | `curl -I`, `curl -v`            | `nc`, `telnet`                |
+| Grep/parsing        | `rg` (ripgrep), `jq`            | `grep`, `sed`, `awk`          |
+| Workflow automation | `bash` loops with file tracking | Python/Go scripts             |
 
 ---
 
-## 📊 Evidence Confidence Framework
+## Evidence Confidence Framework
 
 Use this framework to classify every finding:
 
 ### Tier A: High Confidence (Direct/Live Evidence)
+
 - **DNS**: Live `dig` output, current resolution state
 - **Network**: `nmap` scan output with confirmed open ports
 - **TLS**: `openssl s_client` certificate captures with timestamps
@@ -308,12 +330,14 @@ Use this framework to classify every finding:
 - **Definition**: Directly observable in current time window, repeatable
 
 ### Tier B: Medium Confidence (Indirect but Structured)
+
 - **Consolidated mappings**: Derived from Tier A sources, but requires aggregation logic
 - **Multi-source correlation**: Same finding from ≥2 independent tools
 - **Example**: `domain_ip_map.tsv` built from both DNS queries and nmap reverse scans
 - **Definition**: Trustworthy but requires interpretation step
 
 ### Tier C: Hint-Only / Noisy (Historical Context)
+
 - **Reverse-IP historical data**: Known to include stale records, false positives, CSS/JS tokens
 - **Shared certificate issuer**: Weak signal for shared backend (many orgs share DigiCert, etc.)
 - **Cached/archived data**: WHOIS history, old DNS records
@@ -335,26 +359,27 @@ Use this framework to classify every finding:
 
 ---
 
-## ⚠️ Common Pitfalls & Solutions
+## Common Pitfalls & Solutions
 
-| Pitfall | Problem | Solution |
-|:---|:---|:---|
-| **Sourcemap endpoints** | Return 200 but serve SPA HTML fallback instead of JSON | Ignore `.js.map` URLs; use direct chunk file downloads instead |
-| **Code splitting** | Modern SPAs hide ~90% of API logic in dynamic chunks | Extract chunk filenames from main bundle, batch-download via `/assets/*.js`, grep endpoints |
-| **Virtual hosting overlap** | Same IP, different domains, multiple certs via SNI | Build SNI matrix; use forced host routing to test if backend routes or rejects |
-| **Reverse-IP noise** | Aggregated historical data includes CSS tokens, JS keywords, unrelated domains | Filter by domain regex; mark as Tier C (hint-only); require Tier A confirmation |
-| **TLS reset on port 443** | Ambiguous signal (no TLS, strict routing, DDoS protection) | Try different SNI values; check if IP + HTTP works; correlate with nmap -sV |
-| **WHOIS privacy** | Registrant hidden behind privacy service | Skip; focus on DNS, certificates, network evidence instead |
-| **Rate limiting** | Reverse-IP APIs and CT log bulk fetches may throttle | Use caching; space out requests; batch process results locally |
-| **Cloud infrastructure** | AWS/Alibaba/GCP IPs are shared across many organizations | Correlate with DNS/certificate evidence; don't assume co-location = relationship |
+| Pitfall                     | Problem                                                                        | Solution                                                                                    |
+| :-------------------------- | :----------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------ |
+| **Sourcemap endpoints**     | Return 200 but serve SPA HTML fallback instead of JSON                         | Ignore `.js.map` URLs; use direct chunk file downloads instead                              |
+| **Code splitting**          | Modern SPAs hide ~90% of API logic in dynamic chunks                           | Extract chunk filenames from main bundle, batch-download via `/assets/*.js`, grep endpoints |
+| **Virtual hosting overlap** | Same IP, different domains, multiple certs via SNI                             | Build SNI matrix; use forced host routing to test if backend routes or rejects              |
+| **Reverse-IP noise**        | Aggregated historical data includes CSS tokens, JS keywords, unrelated domains | Filter by domain regex; mark as Tier C (hint-only); require Tier A confirmation             |
+| **TLS reset on port 443**   | Ambiguous signal (no TLS, strict routing, DDoS protection)                     | Try different SNI values; check if IP + HTTP works; correlate with nmap -sV                 |
+| **WHOIS privacy**           | Registrant hidden behind privacy service                                       | Skip; focus on DNS, certificates, network evidence instead                                  |
+| **Rate limiting**           | Reverse-IP APIs and CT log bulk fetches may throttle                           | Use caching; space out requests; batch process results locally                              |
+| **Cloud infrastructure**    | AWS/Alibaba/GCP IPs are shared across many organizations                       | Correlate with DNS/certificate evidence; don't assume co-location = relationship            |
 
 ---
 
-## 📝 Output Deliverables Template
+## Output Deliverables Template
 
 For each investigation, generate these artifacts:
 
 ### 1. **DNS & IP Inventory** (`dns/`)
+
 ```
 all_domains_discovered.txt          # Cleaned subdomain list
 domain_ip_map.tsv                   # domain, IP, record_type, CNAME chain
@@ -364,6 +389,7 @@ unique_ips.txt                      # IPs for scanning
 ```
 
 ### 2. **Port & Service Scan** (`ports/`)
+
 ```
 nmap_http_tls.nmap                  # Fast: -p80,443 -sV
 nmap_service.nmap                   # Medium: -p- -sV --top-ports
@@ -372,15 +398,17 @@ port_service_map.txt                # Parsed table of open ports
 ```
 
 ### 3. **Technology Stack Report** (`report/`)
+
 ```
 <domain>_stack_analysis.md          # Frontend/backend stack details
-                                     # Includes: framework, UI libs, APIs, 
+                                     # Includes: framework, UI libs, APIs,
                                      # code splitting patterns, cloud deps
 infrastructure_relationships.md      # Public edges, private tooling, boundaries
 evidence_manifest.txt               # Traceability: conclusion → source file/line
 ```
 
 ### 4. **Raw Evidence** (`raw/`)
+
 ```
 <domain>.html                       # Homepage HTML captures
 <domain>_live_dns.txt              # Current DNS resolution
@@ -390,10 +418,12 @@ live_probe_timeline.txt            # Timestamped probe sequence
 ```
 
 ### 5. **Confidence Audit Trail** (inline in reports)
+
 ```markdown
 ## Finding: app.example.com runs Vue 2
+
 - **Confidence**: Tier A
-- **Evidence**: 
+- **Evidence**:
   - grep result: `raw/app.example.com.html:123` (bundle mentions "vue" + "webpackJsonp")
   - Validation: curled homepage on 2026-05-13 07:15 UTC
 - **Alternative hypotheses tested**: Angular (ruled out - no ng-app), React (ruled out - no #root)
@@ -401,9 +431,9 @@ live_probe_timeline.txt            # Timestamped probe sequence
 
 ---
 
-## 🚀 Workflow: From Request to Deliverable
+## Workflow: From Request to Deliverable
 
-1. **Intake**: Receive target company/domain
+1. Intake: receive target organization/domain and confirm authorization/scope
 2. **Phase 1a**: DNS enumeration → `all_domains_discovered.txt`
 3. **Phase 1b**: Reverse-IP aggregation → `reverseip_all_domains.txt`
 4. **Phase 1c**: Port scanning → `nmap_*.nmap` files
@@ -417,10 +447,9 @@ live_probe_timeline.txt            # Timestamped probe sequence
 
 ---
 
-## 💡 Key Insights from Field Work
+## Key Insights from Field Work
 
 - **Dynamic chunks are business logic**: Webpack/Vite code splitting often hides APIs in lazy-loaded chunks. Always extract and analyze chunk files, not just the main bundle.
-  
 - **SNI + virtual hosting = certificate multiplexing**: Modern infrastructure (Istio, tengine with SNI) routes different domains to different backends using the same IP. Use SNI probes to detect this.
 
 - **Confidence matters more than volume**: 10 Tier A findings beat 1000 Tier C hints. False positives from historical reverse-IP data cost investigation time.
@@ -431,7 +460,7 @@ live_probe_timeline.txt            # Timestamped probe sequence
 
 ---
 
-## 📚 Further Reading & References
+## Further Reading & References
 
 - **OWASP Top 10 for APIs**: For backend API patterns
 - **Kubernetes / Istio docs**: For edge gateway fingerprinting
@@ -441,7 +470,7 @@ live_probe_timeline.txt            # Timestamped probe sequence
 
 ---
 
-## 🎓 Example: Running the Full Methodology
+## Example: Running the Full Methodology
 
 ```bash
 # Directory setup
@@ -456,4 +485,3 @@ mkdir -p dns ports raw report http tls scripts
 # Output: Comprehensive infrastructure map with confidence tiers and evidence trails
 # Ready for: strategic planning, security assessment, due diligence, etc.
 ```
-

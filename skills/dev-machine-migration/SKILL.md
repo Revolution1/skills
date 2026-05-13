@@ -196,20 +196,24 @@ for d in ~/code/*; do [ -d "$d/.git" ] && echo "### ${d##*/}" && git -C "$d" sta
 Always structure the migration summary like this:
 
 ### Must migrate
+
 - path
 - reason
 - method
 
 ### Optional
+
 - path
 - reason
 - default action
 
 ### Skip
+
 - path/pattern
 - reason
 
 ### Services inventory
+
 - service/process
 - owner project
 - current port(s)
@@ -217,9 +221,11 @@ Always structure the migration summary like this:
 - restore command if relevant
 
 ### Copy commands
+
 - exact commands in execution order
 
 ### Verification commands
+
 - exact commands in execution order
 
 ## Transport guidance

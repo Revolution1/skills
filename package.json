@@ -1,0 +1,13 @@
+{
+  "name": "revolution1-skills",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "fmt": "prettier --write \"skills/**/*.md\" README.md",
+    "fmt:check": "prettier --check \"skills/**/*.md\" README.md",
+    "validate": "python3 scripts/validate_skills.py"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.3"
+  }
+}
