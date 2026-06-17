@@ -14,11 +14,11 @@ generated files after inspecting the actual target repos:
 
 ```bash
 python3 <skill-dir>/scripts/scaffold_harness.py \
-  --path ~/code/8004scan-harness \
-  --name 8004scan-harness \
-  --domain 8004scan \
-  --repo backend=https://github.com/<org>/8004scan-backend.git \
-  --repo frontend=https://github.com/<org>/8004scan-frontend.git
+  --path ~/code/acme-platform-harness \
+  --name acme-platform-harness \
+  --domain acme-platform \
+  --repo api-service=https://github.com/<org>/api-service.git \
+  --repo web-app=https://github.com/<org>/web-app.git
 ```
 
 Use the script as a starting point, not as final truth. The finished harness
