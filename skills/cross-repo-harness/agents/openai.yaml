@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cross Repo Harness"
+  short_description: "Operate related repos through a harness"
+  default_prompt: "Use $cross-repo-harness to create or operate a lightweight harness repo for related repositories."

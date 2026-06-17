@@ -1,0 +1,16 @@
+{
+  "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+  "notGrouped": "bottom",
+  "groupings": [
+    {
+      "title": "Operations",
+      "description": "Skills for infrastructure, multi-repo operations, migration, and remote development environments.",
+      "skills": ["cross-repo-harness", "dev-machine-migration", "remote-chrome-devtools"]
+    },
+    {
+      "title": "Security",
+      "description": "Skills for authorized infrastructure reconnaissance and external attack-surface review.",
+      "skills": ["enterprise-infrastructure-osint"]
+    }
+  ]
+}

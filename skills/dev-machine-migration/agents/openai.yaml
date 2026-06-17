@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dev Machine Migration"
+  short_description: "Migrate developer workspaces safely"
+  default_prompt: "Use $dev-machine-migration to inventory, plan, migrate, and verify developer workspace data."

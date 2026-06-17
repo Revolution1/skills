@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "fmt": "prettier --write \"skills/**/*.md\" README.md",
-    "fmt:check": "prettier --check \"skills/**/*.md\" README.md",
-    "validate": "python3 scripts/validate_skills.py"
+    "fmt": "prettier --write \"skills/**/*.md\" README.md skills.sh.json",
+    "fmt:check": "prettier --check \"skills/**/*.md\" README.md skills.sh.json",
+    "skills:list": "npx skills add . --list",
+    "validate": "python3 scripts/validate_skills.py",
+    "check": "npm run fmt:check && npm run validate && npm run skills:list"
   },
   "devDependencies": {
     "prettier": "^3.5.3"

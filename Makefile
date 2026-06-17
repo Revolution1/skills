@@ -1,4 +1,4 @@
-.PHONY: install fmt fmt-check validate check all
+.PHONY: install fmt fmt-check skills-list validate check all
 
 PRETTIER := node_modules/.bin/prettier
 
@@ -12,20 +12,24 @@ node_modules: package.json
 	npm install
 	@touch node_modules
 
-## fmt: format all Markdown files in-place
+## fmt: format Markdown and skills.sh metadata in-place
 fmt: node_modules
-	$(PRETTIER) --write "skills/**/*.md" README.md
+	$(PRETTIER) --write "skills/**/*.md" README.md skills.sh.json
 
 ## fmt-check: verify formatting without writing (for CI)
 fmt-check: node_modules
-	$(PRETTIER) --check "skills/**/*.md" README.md
+	$(PRETTIER) --check "skills/**/*.md" README.md skills.sh.json
+
+## skills-list: verify the skills CLI discovers this local checkout
+skills-list:
+	npx skills add . --list
 
 ## validate: check skill structure conventions
 validate:
 	python3 scripts/validate_skills.py
 
-## check: fmt-check + validate (CI gate)
-check: fmt-check validate
+## check: fmt-check + validate + local skills CLI discovery (CI gate)
+check: fmt-check validate skills-list
 
 help:
 	@grep -E '^## ' Makefile | sed 's/^## /  make /'

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Enterprise Infrastructure OSINT"
+  short_description: "Map authorized external infrastructure"
+  default_prompt: "Use $enterprise-infrastructure-osint to map an authorized organization's external infrastructure and evidence."
