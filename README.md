@@ -48,7 +48,31 @@ The validator checks each skill for:
 
 ## Usage
 
-Copy the desired skill folder into your agent skills directory, or vendor it into your own repository.
+Install skills with the `skills` CLI:
+
+```bash
+npx skills add Revolution1/skills --agent codex --global
+```
+
+List skills from this repository before installing:
+
+```bash
+npx skills add Revolution1/skills --list
+```
+
+Install one skill by name:
+
+```bash
+npx skills add Revolution1/skills --skill cross-repo-harness --agent codex --global
+```
+
+You can also install from a local checkout:
+
+```bash
+npx skills add . --skill cross-repo-harness --agent codex --global
+```
+
+Manual fallback: copy the desired skill folder into your agent skills directory, or vendor it into your own repository.
 
 Example (VS Code Copilot):
 
